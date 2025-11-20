@@ -1,0 +1,881 @@
+{
+  "name": "Telegram Bot - Meetupversion",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "bc892590-7ae1-412b-8bbe-4d33d5c05ea4",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -3104,
+        304
+      ],
+      "webhookId": "6d8a1406-d252-4953-9090-a403bde014a7",
+      "credentials": {
+        "telegramApi": {
+          "id": "OzV6Lsnw1LxddUPe",
+          "name": "Telegram Homebot account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "319c8518-4d07-4e71-b766-ddc756ea8c99",
+              "name": "text",
+              "value": "={{ $json.message.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b2196873-e3c9-496b-b8dd-c82eec5eaba8",
+      "name": "Set 'Text'",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2176,
+        176
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.voice.file_id }}",
+        "additionalFields": {}
+      },
+      "id": "fd74c307-0a8d-413d-a9be-159b9b42047f",
+      "name": "Download Voice File",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -2272,
+        448
+      ],
+      "webhookId": "bea06101-051d-4cc2-acb8-75ac5348e468",
+      "credentials": {
+        "telegramApi": {
+          "id": "OzV6Lsnw1LxddUPe",
+          "name": "Telegram Homebot account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "id": "cc7d60e0-2ee4-4e44-974b-42de69b45ed0",
+      "name": "OpenAI",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.7,
+      "position": [
+        -2096,
+        448
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "A6AhAz5Q1Of9JKPn",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "791839af-8ce9-4daf-b870-517874d6b1e9",
+              "name": "text",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            },
+            {
+              "id": "f718945d-477f-4de8-9c89-f59c1f80eb12",
+              "name": "sessionId",
+              "value": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2893b223-8b26-4d3c-a296-d4522ab722ae",
+      "name": "Combine",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1872,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Sendet eMails über einen SMTP Server. Du schreibst im Namen von \"Rudi\". Du verwendest die Du-Form, es sei denn ein Kontakt wünscht die förmliche Anrede.\nDie Kontaktadressen solltest du aus der Kontaktdatenbank abrufenn.",
+        "fromEmail": "system@test.com",
+        "toEmail": "={{ $fromAI(\"mail\") }}",
+        "subject": "={{ $fromAI(\"subject\") }}",
+        "emailFormat": "text",
+        "text": "={{ $fromAI(\"message\") }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.emailSendTool",
+      "typeVersion": 2.1,
+      "position": [
+        -1168,
+        912
+      ],
+      "id": "5cc070ee-7891-4d4a-b128-b5e5558801ab",
+      "name": "Send Email",
+      "webhookId": "b1f4a144-a9b6-4839-bf8a-cbbb20bc8bf3",
+      "credentials": {
+        "smtp": {
+          "id": "zkOobtMn9aGFA3u4",
+          "name": "SMTP System account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Eingang der Nachricht\n\nUmwandeln der verschiedenen Inputformate",
+        "height": 512,
+        "width": 1484
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -3200,
+        128
+      ],
+      "typeVersion": 1,
+      "id": "9d45c971-e9f1-4c11-809d-8998a75f05f3",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        -1344,
+        288
+      ],
+      "id": "3e57bb0b-5af3-4e51-a834-7aff06a51e5e",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-4o-mini",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -1456,
+        480
+      ],
+      "id": "2136a737-8715-49b8-9453-b91362f15ef7",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "mFY3XP10D3lMUfi2",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 25
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -1296,
+        480
+      ],
+      "id": "adab0c5f-d858-4dd4-af2b-3e00cdfcfcf4",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "toolDescription": "AI Agent der Aufgaben zu Redmine Tickets erledigt. Für die Anlage eines Tickets soll mind. erforderlich sein.\n- Beschreibung\n- Titel\n- Priorität",
+        "text": "={{ $('Combine').item.json.text }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 2.2,
+      "position": [
+        -1856,
+        1136
+      ],
+      "id": "77936054-374a-4084-aa3a-20c454eb1112",
+      "name": "Redmine"
+    },
+    {
+      "parameters": {
+        "databaseId": 105,
+        "tableId": 697,
+        "additionalOptions": {}
+      },
+      "type": "n8n-nodes-base.baserowTool",
+      "typeVersion": 1,
+      "position": [
+        -1792,
+        1408
+      ],
+      "id": "10975493-2e2f-4729-8fe7-bfe099b56d12",
+      "name": "Redmine Projekteigenschaften",
+      "credentials": {
+        "baserowApi": {
+          "id": "NFlEC3shK2BKwt5n",
+          "name": "Baserow account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Erstellt ein Redmine Ticket für ein bestimmtes Projekt. \nAktuell gibt es folgende Projekte, die mit einer ID kodiert werden:\n- Contigo (ID=contigo)\n- Künstliche Intelligenz (ID=ki)\n\nEscape alle DAten so, dass sie in eine JSON Struktur übergeben werden können. Lass keine \\n Zeilenumbrüche zu.\n",
+        "method": "POST",
+        "url": "https://redmine.meinedomain.com/issues.json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"issue\": {\n    \"project_id\": \"{projectId}\",\n    \"subject\": \"{subject}\",\n    \"description\": \"{description}\",\n    \"tracker_id\": {trackerId},\n    \"priority_id\": 1\n  }\n}",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "projectId",
+              "description": "Projekt ID",
+              "type": "string"
+            },
+            {
+              "name": "subject",
+              "description": "Titel des Tickets",
+              "type": "string"
+            },
+            {
+              "name": "description",
+              "description": "Bezeichnung oder Beschreibungstext des Tickets. Escape den String, so dass er im JSON stehen kann.",
+              "type": "string"
+            },
+            {
+              "name": "trackerId",
+              "description": "ID des Trackers",
+              "type": "number"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        -1600,
+        1408
+      ],
+      "id": "9691d1b8-b329-4bef-8025-fc92c05472d0",
+      "name": "Redmine Ticket erstellen",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "7MB2z8QvQ5d9AHIw",
+          "name": "Redmine"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Liest ein Redmine Ticket für ein bestimmtes Projekt aus. \nAktuell gibt es folgende Projekte, die mit einer ID kodiert werden:\n- Contigo (ID=contigo)\n- Künstliche Intelligenz (ID=ki)\n\nEscape alle Daten so, dass sie in eine JSON Struktur übergeben werden können. Lass keine \\n Zeilenumbrüche zu.\n",
+        "url": "https://redmine.deinedomain.com/issues.json?project_id={projectId}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "projectId",
+              "description": "Projekt ID",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        -1424,
+        1408
+      ],
+      "id": "716c6e4a-cecb-4334-92ba-b037000a44e9",
+      "name": "Redmine Tickets lesen",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "7MB2z8QvQ5d9AHIw",
+          "name": "Redmine"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -1936,
+        1328
+      ],
+      "id": "62239bd7-3c42-4118-9d0e-b15401d1b4e7",
+      "name": "OpenRouter Chat Model3",
+      "credentials": {
+        "openRouterApi": {
+          "id": "mFY3XP10D3lMUfi2",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "d33d76f7-ae50-4296-ba12-d2579ad8cbba",
+      "name": "Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -816,
+        288
+      ],
+      "webhookId": "0a438984-eb61-4253-9b1d-ca1b295ddeec",
+      "credentials": {
+        "telegramApi": {
+          "id": "OzV6Lsnw1LxddUPe",
+          "name": "Telegram Homebot account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-4o-mini",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -432,
+        1120
+      ],
+      "id": "df79791b-86d8-4f4c-9a9b-594cb29e4b5a",
+      "name": "OpenRouter Chat Model1",
+      "credentials": {
+        "openRouterApi": {
+          "id": "mFY3XP10D3lMUfi2",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "This bot is private",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -2704,
+        448
+      ],
+      "id": "02bf13e5-51f4-43be-9bc3-bcc73c65ffe4",
+      "name": "Send a text message",
+      "webhookId": "b4bdbf2b-f12c-4ccb-abdc-8301a31eaf56",
+      "credentials": {
+        "telegramApi": {
+          "id": "OzV6Lsnw1LxddUPe",
+          "name": "Telegram Homebot account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Verarbeitung",
+        "height": 512,
+        "width": 656,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1568,
+        128
+      ],
+      "typeVersion": 1,
+      "id": "84794b41-98b5-42c6-b1ad-6528e41dff1c",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "resource": "state",
+        "operation": "getAll",
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.homeAssistantTool",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        1120
+      ],
+      "id": "0cb94091-4a1d-4979-a422-8ae11f08d3ed",
+      "name": "Home Assistant1",
+      "credentials": {
+        "homeAssistantApi": {
+          "id": "4ZP5wn30BI8HsDLi",
+          "name": "Home Automation"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Dieser Agent übernimmt die Abfrage von Geräten in meinem zu Hause. Mittels Heimautomatisierung sind viele Geräte angebunden.",
+        "text": "={{ $('Combine').item.json.text }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 2.2,
+      "position": [
+        -432,
+        944
+      ],
+      "id": "acda0bc8-29aa-48b8-8814-46c6e4cfd951",
+      "name": "Home Assistant"
+    },
+    {
+      "parameters": {
+        "authentication": "nocoDbApiToken",
+        "operation": "getAll",
+        "projectId": "p3irdvb611b9b23",
+        "table": "mbcl6sxcchmgudv",
+        "options": {
+          "fields": [
+            "Name",
+            "Mail",
+            "Phonenumber"
+          ],
+          "where": ""
+        }
+      },
+      "type": "n8n-nodes-base.nocoDbTool",
+      "typeVersion": 3,
+      "position": [
+        -1024,
+        912
+      ],
+      "id": "2e7e5e3f-b0bd-4a05-ad67-c67bb82d3124",
+      "name": "Kontakte",
+      "credentials": {
+        "nocoDbApiToken": {
+          "id": "MGQY53jMLCaDb2en",
+          "name": "NocoDB Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "endpointUrl": "https://hook.deinedomain.com/mcp/send-an-sms",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [
+        -1312,
+        912
+      ],
+      "id": "5ef40776-4377-4008-9db1-8bfbfbb66bd8",
+      "name": "SMS Sender"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "02e2462a-d0f6-4317-9c13-390a9ddff7c2",
+              "leftValue": "={{ [CHATID-EINTRAGEN] }}",
+              "rightValue": "={{ $json.message.chat.id }}",
+              "operator": {
+                "type": "array",
+                "operation": "contains",
+                "rightType": "any"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2896,
+        304
+      ],
+      "id": "70678cc1-026d-432b-878b-7594d5d10830",
+      "name": "Nur mich zulassen"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Text"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "cbd080bb-0e85-44c9-9cc8-193c3f65bf4b",
+                    "leftValue": "={{ $json.message.voice.file_id }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Voice"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "21e9a72f-e864-4704-870f-0b0e97973a70",
+      "name": "ist es Audio oder Text?",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -2480,
+        304
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Nur mich zulassen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set 'Text'": {
+      "main": [
+        [
+          {
+            "node": "Combine",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Voice File": {
+      "main": [
+        [
+          {
+            "node": "OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI": {
+      "main": [
+        [
+          {
+            "node": "Combine",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redmine": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redmine Projekteigenschaften": {
+      "ai_tool": [
+        [
+          {
+            "node": "Redmine",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redmine Ticket erstellen": {
+      "ai_tool": [
+        [
+          {
+            "node": "Redmine",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redmine Tickets lesen": {
+      "ai_tool": [
+        [
+          {
+            "node": "Redmine",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Redmine",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Home Assistant",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Home Assistant1": {
+      "ai_tool": [
+        [
+          {
+            "node": "Home Assistant",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Home Assistant": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Kontakte": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SMS Sender": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nur mich zulassen": {
+      "main": [
+        [
+          {
+            "node": "ist es Audio oder Text?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ist es Audio oder Text?": {
+      "main": [
+        [
+          {
+            "node": "Set 'Text'",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Download Voice File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "0202e8ee-2840-426f-9e1f-e96e34b020bd",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "5daa2f15c79fdbf960faec16e8e331b3971b4aa36625853a1ca332f303e7b9a3"
+  },
+  "id": "M8EsuptECePJilnu",
+  "tags": [
+    {
+      "createdAt": "2025-02-06T10:35:52.209Z",
+      "updatedAt": "2025-02-06T10:35:52.209Z",
+      "id": "3heCVYPNlPOpBT3X",
+      "name": "AI"
+    }
+  ]
+}
