@@ -1,0 +1,210 @@
+{
+  "name": "2 Entscheidung Feedback",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1072,
+        160
+      ],
+      "id": "e72e327f-f70a-473a-b056-46805dc1989c",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "bewertung",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -656,
+        160
+      ],
+      "id": "59cf4795-c1ce-4bf1-befd-51d00789339d",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "inputText": "={{ $json.bewertung }}",
+        "options": {
+          "categories": "Positive Feedback, Neutral Feedback, Negative Feedback"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.sentimentAnalysis",
+      "typeVersion": 1.1,
+      "position": [
+        -432,
+        128
+      ],
+      "id": "a8f78043-f042-433f-81b1-c1462c737d7e",
+      "name": "Sentiment Analysis"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -432,
+        400
+      ],
+      "id": "2c352363-b943-41f4-9d97-2badff6c7b58",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "dX74PfoQlE8OfLw8",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        64,
+        -48
+      ],
+      "id": "2a3f3ec7-b4cb-4cbc-b27a-2c2e8e02e3ab",
+      "name": "Alles ok, nichts unternehmen"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        64,
+        144
+      ],
+      "id": "a3478dce-f063-4fc5-a62b-3758b1b9445e",
+      "name": "Neutral, keine Aktion"
+    },
+    {
+      "parameters": {
+        "fromEmail": "ticket@test.de",
+        "toEmail": "productowner@test.de",
+        "subject": "Negatives Feedback",
+        "html": "=Es gab ein neues negatives Feedback:\n\n{{ $json.bewertung }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        64,
+        320
+      ],
+      "id": "2471ad8c-a846-48fc-839d-a954462e7916",
+      "name": "Send email",
+      "webhookId": "eca2666e-c271-4217-a192-e7ad0f2fedeb"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5656ade9-b55f-41ae-bf4a-9e760588300c",
+              "name": "bewertung",
+              "value": "={{ [\"Die Software ist super und ich setze sie jeden Tag ein.\", \"Ich habe mir von dem Programm mehr erhofft. Für den Preis ist die Leistung echt schlecht.\", \"Alles ok, aber wenn ich im Programm auf Senden klicke, bekomme ich eine Fehlermeldung\"] }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -864,
+        160
+      ],
+      "id": "c72715cc-099c-4b48-b9d8-552b5f6cd054",
+      "name": "Beispieldaten setzen"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Beispieldaten setzen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Sentiment Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sentiment Analysis": {
+      "main": [
+        [
+          {
+            "node": "Alles ok, nichts unternehmen",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Neutral, keine Aktion",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Sentiment Analysis",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Beispieldaten setzen": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b25e8b95-f279-44cc-9338-00eec8d7dd38",
+  "meta": {
+    "instanceId": "551a844254e74ea583fdb5f126cca246717096bd0657581843e86e23bf86d7f2"
+  },
+  "id": "Bdg3nuJwLHRBK4nF",
+  "tags": []
+}
