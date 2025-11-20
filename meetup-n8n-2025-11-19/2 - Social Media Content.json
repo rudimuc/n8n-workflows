@@ -1,0 +1,446 @@
+{
+  "name": "2 - Social Media Content",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {
+          "responseMode": "responseNodes"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -1264,
+        0
+      ],
+      "id": "1753b45c-b489-426e-8b54-18fc4f6e533f",
+      "name": "When chat message received",
+      "webhookId": "d0b1f5dc-0036-4ee3-826a-950c27786553"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -1024,
+        176
+      ],
+      "id": "4d0d7f25-a203-4784-b431-5f0e17dcf145",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "dX74PfoQlE8OfLw8",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -880,
+        176
+      ],
+      "id": "ed7bdb18-4c60-498a-bf6e-251583aa0b5e",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"posting\": \"Heute erzähle ich euch etwas über n8n und die Automatisierungsmöglichkeiten. Beginnen wir mit dem Import von Workflows.\",\n\t\"imageprompt\": \"Zahnräder, die im Comicstil gezeichnet sind und an einer Wand angebracht sind.\",\n    \"seowords\": [\"n8n\", \"automation\", \"artificialintelligence\"],\n    \"summary\": \"Automatisierung leicht gemacht - mit n8n\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -736,
+        176
+      ],
+      "id": "89c236a0-b4ae-460b-8954-0f52849cab3f",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.data.status }}",
+                    "rightValue": "completed",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "e3ad9ee0-ab8f-496b-b187-7eec18df8f75"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "completed"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "fa26529f-d8c8-4676-af3b-37c89be639da",
+                    "leftValue": "={{ $json.data.status }}",
+                    "rightValue": "completed",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEquals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "failed"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -256,
+        -144
+      ],
+      "id": "f9f8dbfc-2e8a-4f34-b8ea-6e999707b978",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.wavespeed.ai/api/v3/wavespeed-ai/flux-dev-lora",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "enable_base64_output",
+              "value": "false"
+            },
+            {
+              "name": "enable_sync_mode",
+              "value": "true"
+            },
+            {
+              "name": "output_format",
+              "value": "jpeg"
+            },
+            {
+              "name": "prompt",
+              "value": "={{  $json.output.imageprompt }}"
+            },
+            {
+              "name": "seed",
+              "value": "-1"
+            },
+            {
+              "name": "size",
+              "value": "=1024x1024"
+            }
+          ]
+        },
+        "options": {
+          "redirect": {
+            "redirect": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -528,
+        -128
+      ],
+      "id": "076abb19-4ad7-43ac-81dc-a2bb768fdcb1",
+      "name": "Bild erstellen",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "M5ZC3GEyGqPuWdh2",
+          "name": "Wavespeed Bearer Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.data.outputs[0] }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        -160
+      ],
+      "id": "b278a5cd-68b0-4de4-a1d7-9917dbaa4d93",
+      "name": "Bild runterladen"
+    },
+    {
+      "parameters": {
+        "message": "={{ $json.output.toJsonString() }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1,
+      "position": [
+        -528,
+        64
+      ],
+      "id": "cb620dc6-f391-4d6d-abfa-0e41a33f9aec",
+      "name": "Respond to Chat"
+    },
+    {
+      "parameters": {
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "Du bist ein Assistent, der den Benutzer dabei unterstützt Social Media Posts zu erstellen. Der Benutzer gibt dir ein Thema vor und ggf. auch seine Meinung. Nimm diesen Input und erstelle daraus folgenden Output:\n\n- Den Postbeitrag (in Markdown formatiert)\n- Einen Bildprompt für ein passendes Bild\n- Einen kurzen Teasertext für den Beitrag\n- eine Liste mit SEO Keywords"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -1008,
+        0
+      ],
+      "id": "21af21de-3e9a-4184-9ad9-1ee66271b4da",
+      "name": "AI Agent für Themenformulierung"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        336,
+        -32
+      ],
+      "id": "c044ed29-2b66-4156-9c12-1f78c8914373",
+      "name": "Post durchführen"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $('Respond to Chat').item.json.toJsonString() }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        240,
+        160
+      ],
+      "id": "9c1110dc-e3a5-4f05-b3fb-31c97c163bbb",
+      "name": "Liefer den Userinput"
+    },
+    {
+      "parameters": {
+        "inputText": "={{ $('Respond to Chat').item.json.chatInput }}",
+        "options": {
+          "categories": "UserAccepts, UserWantsChange",
+          "systemPromptTemplate": "You are highly intelligent and accurate sentiment analyzer. Analyze the sentiment of the provided text. Categorize it into one of the following: {categories}. Use the provided formatting instructions. Only output the JSON."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.sentimentAnalysis",
+      "typeVersion": 1.1,
+      "position": [
+        -272,
+        64
+      ],
+      "id": "ce24c989-2f57-4c16-9fa0-41a2070642bf",
+      "name": "Sentiment Analysis"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -272,
+        224
+      ],
+      "id": "bd193199-f786-4689-943b-dd97c3d57525",
+      "name": "OpenRouter Chat Model2",
+      "credentials": {
+        "openRouterApi": {
+          "id": "dX74PfoQlE8OfLw8",
+          "name": "OpenRouter account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent für Themenformulierung",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent für Themenformulierung",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent für Themenformulierung",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent für Themenformulierung",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Bild runterladen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Bild erstellen": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Chat": {
+      "main": [
+        [
+          {
+            "node": "Sentiment Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent für Themenformulierung": {
+      "main": [
+        [
+          {
+            "node": "Bild erstellen",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Respond to Chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Liefer den Userinput": {
+      "main": [
+        [
+          {
+            "node": "AI Agent für Themenformulierung",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Sentiment Analysis",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sentiment Analysis": {
+      "main": [
+        [
+          {
+            "node": "Post durchführen",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Liefer den Userinput",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "452665ac-5dcc-41e9-982d-81957d84418e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "551a844254e74ea583fdb5f126cca246717096bd0657581843e86e23bf86d7f2"
+  },
+  "id": "Ekio6XsUhSi2F5te",
+  "tags": []
+}

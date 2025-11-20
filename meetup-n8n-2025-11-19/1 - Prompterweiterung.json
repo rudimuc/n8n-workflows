@@ -1,0 +1,599 @@
+{
+  "name": "1 - Prompterweiterung",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1392,
+        -208
+      ],
+      "id": "0e32d222-ba99-4025-afbf-595841b834d2",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.data.status }}",
+                    "rightValue": "completed",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "e3ad9ee0-ab8f-496b-b187-7eec18df8f75"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "completed"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "fa26529f-d8c8-4676-af3b-37c89be639da",
+                    "leftValue": "={{ $json.data.status }}",
+                    "rightValue": "completed",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEquals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "failed"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -496,
+        -208
+      ],
+      "id": "37f455a8-6011-491a-a911-75228ea31f2d",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.wavespeed.ai/api/v3/wavespeed-ai/flux-dev-lora",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "enable_base64_output",
+              "value": "false"
+            },
+            {
+              "name": "enable_sync_mode",
+              "value": "true"
+            },
+            {
+              "name": "output_format",
+              "value": "jpeg"
+            },
+            {
+              "name": "prompt",
+              "value": "={{ $json.inhalt || $json.output.inhalt }}"
+            },
+            {
+              "name": "seed",
+              "value": "-1"
+            },
+            {
+              "name": "size",
+              "value": "=1024x1024"
+            }
+          ]
+        },
+        "options": {
+          "redirect": {
+            "redirect": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -736,
+        -208
+      ],
+      "id": "20c16923-f9f2-492f-aa7b-8806e8b71800",
+      "name": "Bild erstellen",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "M5ZC3GEyGqPuWdh2",
+          "name": "Wavespeed Bearer Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.data.outputs[0] }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -192,
+        -224
+      ],
+      "id": "fd19938f-998c-410c-b56b-0622a499e195",
+      "name": "Bild runterladen"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.inhalt }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "Du bist ein Assistent, der einen kurzen Prompt des Benutzers erhält. Reichere den Prompt an, so dass er sehr detailliert eine Szene für eine bildgenerierende KI beschreibt."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -1152,
+        -208
+      ],
+      "id": "cd7360aa-14c1-4d5c-a546-e67531e22955",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -1168,
+        0
+      ],
+      "id": "354b7c8a-4764-44ce-a2bc-2b3fba263234",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "dX74PfoQlE8OfLw8",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"inhalt\": \"Ein Hund am Strand, die Sonne steht niedrig und wirft lange Schatten. Es sind einige Wolken am Himmel, aber es ist sehr hell.\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -992,
+        0
+      ],
+      "id": "6b2b3540-011e-4901-8a7a-1724dd2d7483",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.wavespeed.ai/api/v3/bytedance/seedance-v1-lite-i2v-720p",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={\n  \"aspect_ratio\": \"3:4\",\n  \"duration\": 5,\n  \"prompt\": \"Eine Colaflasche, die sich langsam dreht und die Kamera kommt langsam näher\",\n  \"image\": \"{{ $json.data }}\"\n}\n",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 3000
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        368,
+        -224
+      ],
+      "id": "19dbcef5-db72-4852-b835-5fab144702b0",
+      "name": "Clip erstellen",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "M5ZC3GEyGqPuWdh2",
+          "name": "Wavespeed Bearer Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.wavespeed.ai/api/v3/predictions/{{ $('Clip erstellen').item.json.data.id }}/result",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "options": {
+          "redirect": {
+            "redirect": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        576,
+        -224
+      ],
+      "id": "9fc54be3-0d40-4fd3-8b08-c404d7cdebb7",
+      "name": "Status abfragen",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "M5ZC3GEyGqPuWdh2",
+          "name": "Wavespeed Bearer Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.data.outputs[0] }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1024,
+        -352
+      ],
+      "id": "7e759590-3d19-4065-991c-50187a6775df",
+      "name": "Clip runterladen"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.data.status }}",
+                    "rightValue": "completed",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "e3ad9ee0-ab8f-496b-b187-7eec18df8f75"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "completed"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "fa26529f-d8c8-4676-af3b-37c89be639da",
+                    "leftValue": "={{ $json.data.status }}",
+                    "rightValue": "failed",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "failed"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "c9f7929c-58b4-4b25-943b-07e117e5df65",
+                    "leftValue": "={{ [\"created\", \"processing\"] }}",
+                    "rightValue": "={{ $json.data.status }}",
+                    "operator": {
+                      "type": "array",
+                      "operation": "contains",
+                      "rightType": "any"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "repeat"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        768,
+        -240
+      ],
+      "id": "b64fadd4-bf94-42d6-ae6a-ea348760bde0",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "content": "## Videogenerierung",
+        "height": 592,
+        "width": 1264
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        32,
+        -448
+      ],
+      "typeVersion": 1,
+      "id": "a651c4c7-2010-4b7e-a211-6f233bcecc9a",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Bild erstellen",
+        "height": 592,
+        "width": 816,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -816,
+        -448
+      ],
+      "typeVersion": 1,
+      "id": "e7ea8506-d91b-45ff-ad3f-0cec9ad9a86e",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1024,
+        -112
+      ],
+      "id": "277a75ff-9a66-4269-99fd-f9e6df6c37cf",
+      "name": "10 Sek warten",
+      "webhookId": "f18bf289-f54d-41e7-b10a-58ddc8a607aa"
+    },
+    {
+      "parameters": {
+        "operation": "binaryToPropery",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        144,
+        -224
+      ],
+      "id": "01b3c3d6-6f51-4b40-9a5c-8123737c6ebb",
+      "name": "Extract from File"
+    }
+  ],
+  "pinData": {
+    "When clicking ‘Execute workflow’": [
+      {
+        "json": {
+          "inhalt": "ein produktbild von einer Coca cola flasche. Es ist kühl, wassertropfen auf der flasche."
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Bild runterladen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Bild erstellen": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Bild erstellen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clip erstellen": {
+      "main": [
+        [
+          {
+            "node": "Status abfragen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Status abfragen": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "Clip runterladen",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [],
+        [
+          {
+            "node": "10 Sek warten",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Bild runterladen": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10 Sek warten": {
+      "main": [
+        [
+          {
+            "node": "Status abfragen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Clip erstellen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "8cb2de1e-db6e-4b26-8649-34715c3b4229",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "551a844254e74ea583fdb5f126cca246717096bd0657581843e86e23bf86d7f2"
+  },
+  "id": "qmlym8HAmtbzgkHN",
+  "tags": []
+}
